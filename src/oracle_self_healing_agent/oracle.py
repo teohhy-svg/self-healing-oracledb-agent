@@ -68,7 +68,8 @@ class OracleClient:
         except Exception as exc:
             raise RuntimeError(
                 "Could not enable python-oracledb thick mode. Check that Oracle Instant Client 19 or later is "
-                "installed and that ORACLE_CLIENT_LIB_DIR points to the directory containing the client libraries."
+                "installed and that ORACLE_CLIENT_LIB_DIR points to the directory containing the client libraries. "
+                f"Original loader error: {exc}"
             ) from exc
 
     def close(self) -> None:
