@@ -51,6 +51,28 @@
         "space_reclaimable_mb": 120000,
         "used_percent": 92.0
       }
+    ],
+    "expensive_sql": [
+      {
+        "sql_id": "9abc12345xyz",
+        "parsing_schema_name": "APP",
+        "module": "billing-api",
+        "executions": 14,
+        "elapsed_seconds": 642.25,
+        "cpu_seconds": 401.9,
+        "buffer_gets": 9200000,
+        "disk_reads": 61000,
+        "rows_processed": 140,
+        "sql_text_sample": "SELECT * FROM invoice i JOIN customer c ON c.id = i.customer_id WHERE i.status = :B1"
+      }
+    ],
+    "wait_class_pressure": [
+      {
+        "wait_class": "User I/O",
+        "total_waits": 99122,
+        "waited_seconds": 4220.4,
+        "wait_pct": 67.5
+      }
     ]
   }
 }

@@ -10,8 +10,16 @@
     "invalid_objects_min": 1,
     "stale_stats_min": 1,
     "fra_warning_pct": 80.0,
+    "top_sql_limit": 10,
+    "top_sql_elapsed_warning_seconds": 60.0,
+    "top_sql_elapsed_critical_seconds": 300.0,
+    "wait_class_warning_pct": 40.0,
     "datafile_autoextend_next_mb": 1024,
     "datafile_max_mb": 32768
+  },
+  "performance": {
+    "enabled": true,
+    "max_findings_per_run": 8
   },
   "safety": {
     "dry_run": true,

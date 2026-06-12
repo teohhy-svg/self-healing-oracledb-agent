@@ -12,6 +12,8 @@ HEALTHY_FIXTURE = {
         "invalid_objects": [],
         "stale_stats": [],
         "fra_pressure": [],
+        "expensive_sql": [],
+        "wait_class_pressure": [],
     }
 }
 
@@ -38,6 +40,19 @@ INCIDENT_FIXTURE = {
         "invalid_objects": [{"owner": "APP", "object_name": "PKG_A", "object_type": "PACKAGE BODY"}],
         "stale_stats": [{"owner": "APP", "table_name": "ORDERS", "stale_stats": "YES"}],
         "fra_pressure": [{"name": "+FRA", "used_percent": 91.2, "space_reclaimable_mb": 1024}],
+        "expensive_sql": [
+            {
+                "sql_id": "abc123",
+                "parsing_schema_name": "APP",
+                "executions": 2,
+                "elapsed_seconds": 420.0,
+                "cpu_seconds": 300.0,
+                "buffer_gets": 500000,
+                "disk_reads": 12000,
+                "sql_text_sample": "SELECT * FROM orders WHERE status = :B1",
+            }
+        ],
+        "wait_class_pressure": [{"wait_class": "User I/O", "wait_pct": 70.0, "waited_seconds": 990.0}],
     }
 }
 
@@ -56,7 +71,8 @@ class AgentHarnessTests(unittest.TestCase):
         client = FakeOracleClient(INCIDENT_FIXTURE)
         report = SelfHealingAgent(client, config).run_once()
 
-        self.assertEqual(report.summary["checks_unhealthy"], 5)
+        self.assertEqual(report.summary["checks_unhealthy"], 7)
+        self.assertGreaterEqual(report.summary["performance_findings"], 3)
         self.assertGreater(report.summary["actions_planned"], 0)
         self.assertEqual(report.summary["actions_executed"], 0)
         self.assertEqual(client.executed_sql, [])

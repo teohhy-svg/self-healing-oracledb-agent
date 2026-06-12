@@ -194,10 +194,111 @@ WHERE (space_used / NULLIF(space_limit, 0)) * 100 >= :warning_pct
         )
 
 
+class ExpensiveSqlProbe(Probe):
+    name = "expensive_sql"
+    sql = """
+/* probe:expensive_sql */
+SELECT *
+FROM (
+  SELECT
+    sql_id,
+    parsing_schema_name,
+    module,
+    executions,
+    ROUND(elapsed_time / 1000000, 2) AS elapsed_seconds,
+    ROUND(cpu_time / 1000000, 2) AS cpu_seconds,
+    buffer_gets,
+    disk_reads,
+    rows_processed,
+    SUBSTR(sql_text, 1, 160) AS sql_text_sample
+  FROM v$sql
+  WHERE parsing_schema_name NOT IN ('SYS', 'SYSTEM')
+    AND elapsed_time / 1000000 >= :elapsed_warning_seconds
+  ORDER BY elapsed_time DESC
+)
+WHERE ROWNUM <= :top_sql_limit
+"""
+
+    def binds(self, thresholds: ThresholdConfig) -> Dict[str, Any]:
+        return {
+            "elapsed_warning_seconds": thresholds.top_sql_elapsed_warning_seconds,
+            "top_sql_limit": thresholds.top_sql_limit,
+        }
+
+    def evaluate(self, rows: List[Dict[str, Any]], thresholds: ThresholdConfig) -> CheckResult:
+        if not rows:
+            return CheckResult(
+                self.name,
+                "ok",
+                "info",
+                "No SQL statements above the elapsed-time threshold.",
+                {"threshold_seconds": thresholds.top_sql_elapsed_warning_seconds, "rows": []},
+            )
+
+        top = rows[0]
+        elapsed = float(top.get("elapsed_seconds", 0))
+        return CheckResult(
+            self.name,
+            "unhealthy",
+            "critical" if elapsed >= thresholds.top_sql_elapsed_critical_seconds else "warning",
+            f"{len(rows)} SQL statement(s) above {thresholds.top_sql_elapsed_warning_seconds} elapsed seconds.",
+            {
+                "threshold_seconds": thresholds.top_sql_elapsed_warning_seconds,
+                "critical_seconds": thresholds.top_sql_elapsed_critical_seconds,
+                "rows": rows,
+            },
+        )
+
+
+class WaitClassPressureProbe(Probe):
+    name = "wait_class_pressure"
+    sql = """
+/* probe:wait_class_pressure */
+SELECT *
+FROM (
+  SELECT
+    wait_class,
+    total_waits,
+    ROUND(time_waited / 100, 2) AS waited_seconds,
+    ROUND(100 * time_waited / NULLIF(SUM(time_waited) OVER (), 0), 2) AS wait_pct
+  FROM v$system_wait_class
+  WHERE wait_class <> 'Idle'
+    AND time_waited > 0
+  ORDER BY wait_pct DESC
+)
+WHERE wait_pct >= :warning_pct
+"""
+
+    def binds(self, thresholds: ThresholdConfig) -> Dict[str, Any]:
+        return {"warning_pct": thresholds.wait_class_warning_pct}
+
+    def evaluate(self, rows: List[Dict[str, Any]], thresholds: ThresholdConfig) -> CheckResult:
+        if not rows:
+            return CheckResult(
+                self.name,
+                "ok",
+                "info",
+                "No dominant database wait class above threshold.",
+                {"threshold_pct": thresholds.wait_class_warning_pct, "rows": []},
+            )
+
+        top = rows[0]
+        wait_pct = float(top.get("wait_pct", 0))
+        return CheckResult(
+            self.name,
+            "unhealthy",
+            "critical" if wait_pct >= 65 else "warning",
+            f"{len(rows)} database wait class(es) above {thresholds.wait_class_warning_pct}% of non-idle wait time.",
+            {"threshold_pct": thresholds.wait_class_warning_pct, "rows": rows},
+        )
+
+
 DEFAULT_PROBES = [
     TablespacePressureProbe(),
     BlockingSessionsProbe(),
     InvalidObjectsProbe(),
     StaleStatsProbe(),
     FraPressureProbe(),
+    ExpensiveSqlProbe(),
+    WaitClassPressureProbe(),
 ]

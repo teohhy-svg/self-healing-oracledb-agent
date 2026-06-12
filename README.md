@@ -3,11 +3,12 @@
 This project is a safe-by-default Oracle Database healing agent built around a harness engineering approach:
 
 1. Observe database health with focused probes.
-2. Convert symptoms into explicit runbook actions.
-3. Gate every action with risk, approval, and capability checks.
-4. Execute only when dry-run and approval settings allow it.
-5. Verify outcomes and emit a structured report.
-6. Prove behavior first in a deterministic local harness before live Oracle use.
+2. Let the performance expert engineer translate workload symptoms into tuning findings.
+3. Convert safe operational symptoms into explicit runbook actions.
+4. Gate every action with risk, approval, and capability checks.
+5. Execute only when dry-run and approval settings allow it.
+6. Verify outcomes and emit a structured report.
+7. Prove behavior first in a deterministic local harness before live Oracle use.
 
 The default mode is dry-run. It will tell you what it would do without changing the database.
 
@@ -56,6 +57,20 @@ Keep `safety.dry_run` set to `true` until the harness results, privileges, runbo
 | Invalid objects | Invalid schema objects exist | Plans `DBMS_UTILITY.COMPILE_SCHEMA` |
 | Stale optimizer stats | Stale table stats are detected | Plans `DBMS_STATS.GATHER_SCHEMA_STATS` |
 | FRA pressure | Recovery area usage exceeds threshold | Emits a manual RMAN cleanup advisory |
+| Expensive SQL | SQL exceeds elapsed-time threshold | Adds performance expert SQL tuning findings |
+| Wait-class pressure | One wait class dominates non-idle wait time | Adds performance expert wait-analysis findings |
+
+## Performance Expert Engineer
+
+The performance expert engineer is intentionally advisory. It does not auto-apply SQL tuning changes, create indexes, or force plans by default because those actions need workload context and DBA review.
+
+It currently analyzes:
+
+- high elapsed-time SQL from `v$sql`
+- dominant non-idle wait classes from `v$system_wait_class`
+- stale optimizer statistics discovered by the health probes
+
+Findings appear in the report under `performance_findings`, with severity, area, evidence, and a recommended next step.
 
 ## Harness Engineering Approach
 

@@ -5,8 +5,8 @@
 ```mermaid
 flowchart LR
   A["Probe Oracle views"] --> B["Normalize evidence"]
-  B --> C["Match runbook rules"]
-  C --> D["Build action plan"]
+  B --> C["Performance expert analysis"]
+  C --> D["Match runbook rules"]
   D --> E["Apply safety gates"]
   E --> F["Execute or dry-run"]
   F --> G["Verify"]
@@ -20,9 +20,16 @@ The agent is designed so production and test runs use the same logic after the d
 - `OracleClient` reads live Oracle views and executes SQL or PL/SQL.
 - `FakeOracleClient` reads scenario fixtures and records simulated execution.
 - Probes produce `CheckResult` objects.
+- `PerformanceExpertEngineer` produces advisory `PerformanceFinding` objects.
 - Runbooks produce `ActionPlan` objects.
 - The executor applies dry-run, approval, and capability gates.
 - Reports are JSON serializable so CI, dashboards, or incident tools can consume them.
+
+## Performance Expert Engineer
+
+Performance engineering is separated from automatic healing. The advisor can identify high-load SQL, dominant waits, and optimizer-statistics risk, but it emits recommendations instead of unsafe automatic tuning changes.
+
+This keeps the system useful during incidents without letting it make broad workload changes such as creating indexes, changing SQL plans, or rewriting application SQL without review.
 
 ## Safety Principles
 

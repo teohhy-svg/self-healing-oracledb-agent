@@ -44,11 +44,22 @@ class ActionResult:
 
 
 @dataclass
+class PerformanceFinding:
+    finding_id: str
+    severity: str
+    area: str
+    summary: str
+    recommendation: str
+    evidence: Dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
 class HealReport:
     database: str
     dry_run: bool
     started_at: str = field(default_factory=utc_now_iso)
     checks: List[CheckResult] = field(default_factory=list)
+    performance_findings: List[PerformanceFinding] = field(default_factory=list)
     plans: List[ActionPlan] = field(default_factory=list)
     actions: List[ActionResult] = field(default_factory=list)
     summary: Dict[str, Any] = field(default_factory=dict)

@@ -5,6 +5,8 @@
     "blocking_sessions": [],
     "invalid_objects": [],
     "stale_stats": [],
-    "fra_pressure": []
+    "fra_pressure": [],
+    "expensive_sql": [],
+    "wait_class_pressure": []
   }
 }

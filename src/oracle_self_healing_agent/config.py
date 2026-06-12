@@ -20,8 +20,18 @@ class ThresholdConfig:
     invalid_objects_min: int = 1
     stale_stats_min: int = 1
     fra_warning_pct: float = 80.0
+    top_sql_limit: int = 10
+    top_sql_elapsed_warning_seconds: float = 60.0
+    top_sql_elapsed_critical_seconds: float = 300.0
+    wait_class_warning_pct: float = 40.0
     datafile_autoextend_next_mb: int = 1024
     datafile_max_mb: int = 32768
+
+
+@dataclass
+class PerformanceConfig:
+    enabled: bool = True
+    max_findings_per_run: int = 8
 
 
 @dataclass
@@ -38,6 +48,7 @@ class SafetyConfig:
 class AgentConfig:
     database: DatabaseConfig = field(default_factory=DatabaseConfig)
     thresholds: ThresholdConfig = field(default_factory=ThresholdConfig)
+    performance: PerformanceConfig = field(default_factory=PerformanceConfig)
     safety: SafetyConfig = field(default_factory=SafetyConfig)
 
     @classmethod
@@ -45,6 +56,7 @@ class AgentConfig:
         return cls(
             database=DatabaseConfig(**data.get("database", {})),
             thresholds=ThresholdConfig(**data.get("thresholds", {})),
+            performance=PerformanceConfig(**data.get("performance", {})),
             safety=SafetyConfig(**data.get("safety", {})),
         )
 
