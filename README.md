@@ -65,7 +65,28 @@ PYTHONPATH=src python3 -m oracle_self_healing_agent live \
   --report-file reports/live-dry-run.md
 ```
 
-Keep `safety.dry_run` set to `true` until the harness results, privileges, runbooks, and operational approvals are all reviewed.
+Review the dry-run safety switch before any live run:
+
+```json
+"safety": {
+  "dry_run": true,
+  "require_approval": true,
+  "allow_storage_changes": false,
+  "allow_session_kill": false,
+  "allow_stats_jobs": true,
+  "max_actions_per_run": 5
+}
+```
+
+This setting is in `configs/agent.example.json`. Keep `safety.dry_run` set to `true` while testing so the agent diagnoses and reports what it would do without changing the database.
+
+You can override it from the terminal for one session:
+
+```bash
+export AGENT_DRY_RUN=false
+```
+
+Only set dry-run to `false` after the harness results, privileges, runbooks, and operational approvals are all reviewed.
 
 ### DPY-3015 / 10G Password Verifier
 
