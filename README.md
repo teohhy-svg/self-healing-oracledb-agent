@@ -22,6 +22,16 @@ PYTHONPATH=src python3 -m oracle_self_healing_agent harness \
   --config configs/agent.example.json
 ```
 
+Generate a human-readable Markdown report:
+
+```bash
+PYTHONPATH=src python3 -m oracle_self_healing_agent harness \
+  --scenario fixtures/scenarios/high_tablespace_invalid_objects.json \
+  --config configs/agent.example.json \
+  --output-format markdown \
+  --report-file reports/harness-report.md
+```
+
 Run the tests:
 
 ```bash
@@ -44,6 +54,15 @@ export ORACLE_PASSWORD='...'
 export ORACLE_DSN='host:1521/service'
 
 PYTHONPATH=src python3 -m oracle_self_healing_agent live --config configs/agent.example.json
+```
+
+Save a live dry-run report:
+
+```bash
+PYTHONPATH=src python3 -m oracle_self_healing_agent live \
+  --config configs/agent.example.json \
+  --output-format markdown \
+  --report-file reports/live-dry-run.md
 ```
 
 Keep `safety.dry_run` set to `true` until the harness results, privileges, runbooks, and operational approvals are all reviewed.
