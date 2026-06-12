@@ -37,11 +37,39 @@ class OracleClient:
         if not self.config.user or not self.config.password or not self.config.dsn:
             raise RuntimeError("Oracle credentials are incomplete. Set ORACLE_USER, ORACLE_PASSWORD, and ORACLE_DSN.")
 
-        self._connection = oracledb.connect(
-            user=self.config.user,
-            password=self.config.password,
-            dsn=self.config.dsn,
-        )
+        if self.config.thick_mode:
+            self._enable_thick_mode(oracledb)
+
+        try:
+            self._connection = oracledb.connect(
+                user=self.config.user,
+                password=self.config.password,
+                dsn=self.config.dsn,
+            )
+        except Exception as exc:
+            if "DPY-3015" in str(exc) and not self.config.thick_mode:
+                raise RuntimeError(
+                    "Oracle rejected the thin-mode connection because this account uses an old 10G password verifier. "
+                    "Enable thick mode with ORACLE_THICK_MODE=true and ORACLE_CLIENT_LIB_DIR=/path/to/instantclient, "
+                    "or ask a DBA to reset the database user's password so it gets an 11G-or-newer verifier."
+                ) from exc
+            raise
+
+    def _enable_thick_mode(self, oracledb) -> None:
+        if hasattr(oracledb, "is_thin_mode") and not oracledb.is_thin_mode():
+            return
+
+        kwargs = {}
+        if self.config.client_lib_dir:
+            kwargs["lib_dir"] = self.config.client_lib_dir
+
+        try:
+            oracledb.init_oracle_client(**kwargs)
+        except Exception as exc:
+            raise RuntimeError(
+                "Could not enable python-oracledb thick mode. Check that Oracle Instant Client 19 or later is "
+                "installed and that ORACLE_CLIENT_LIB_DIR points to the directory containing the client libraries."
+            ) from exc
 
     def close(self) -> None:
         if self._connection is not None:

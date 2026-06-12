@@ -48,6 +48,25 @@ PYTHONPATH=src python3 -m oracle_self_healing_agent live --config configs/agent.
 
 Keep `safety.dry_run` set to `true` until the harness results, privileges, runbooks, and operational approvals are all reviewed.
 
+### DPY-3015 / 10G Password Verifier
+
+If live mode fails with `DPY-3015: password verifier type 0x939 is not supported by python-oracledb in thin mode`, use one of these fixes:
+
+1. Ask a DBA to reset the database user's password so Oracle stores an 11G-or-newer password verifier.
+2. Enable python-oracledb thick mode with Oracle Instant Client 19 or later.
+
+For thick mode on macOS:
+
+```bash
+export ORACLE_THICK_MODE=true
+export ORACLE_CLIENT_LIB_DIR="$HOME/Downloads/instantclient_23_3"
+
+PYTHONPATH=src python3 -m oracle_self_healing_agent live \
+  --config configs/agent.example.json
+```
+
+`ORACLE_CLIENT_LIB_DIR` should point to the directory containing the Instant Client libraries, such as `libclntsh.dylib` on macOS.
+
 ## Current Runbooks
 
 | Probe | Symptom | Default healing behavior |

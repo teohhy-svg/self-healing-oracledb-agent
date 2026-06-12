@@ -11,6 +11,8 @@ class DatabaseConfig:
     user: str = ""
     password: str = ""
     dsn: str = ""
+    thick_mode: bool = False
+    client_lib_dir: str = ""
 
 
 @dataclass
@@ -64,10 +66,15 @@ class AgentConfig:
         self.database.user = os.getenv("ORACLE_USER", self.database.user)
         self.database.password = os.getenv("ORACLE_PASSWORD", self.database.password)
         self.database.dsn = os.getenv("ORACLE_DSN", self.database.dsn)
+        self.database.client_lib_dir = os.getenv("ORACLE_CLIENT_LIB_DIR", self.database.client_lib_dir)
+
+        thick_mode = os.getenv("ORACLE_THICK_MODE")
+        if thick_mode is not None:
+            self.database.thick_mode = _env_bool(thick_mode)
 
         dry_run = os.getenv("AGENT_DRY_RUN")
         if dry_run is not None:
-            self.safety.dry_run = dry_run.strip().lower() in {"1", "true", "yes", "on"}
+            self.safety.dry_run = _env_bool(dry_run)
 
 
 def load_config(path: Optional[str]) -> AgentConfig:
@@ -82,3 +89,7 @@ def load_config(path: Optional[str]) -> AgentConfig:
     config = AgentConfig.from_dict(data)
     config.apply_env()
     return config
+
+
+def _env_bool(value: str) -> bool:
+    return value.strip().lower() in {"1", "true", "yes", "on"}

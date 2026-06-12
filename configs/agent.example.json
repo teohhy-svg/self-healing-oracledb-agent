@@ -2,7 +2,9 @@
   "database": {
     "user": "",
     "password": "",
-    "dsn": ""
+    "dsn": "",
+    "thick_mode": false,
+    "client_lib_dir": ""
   },
   "thresholds": {
     "tablespace_warning_pct": 85.0,
