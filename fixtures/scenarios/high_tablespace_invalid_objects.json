@@ -1,0 +1,56 @@
+{
+  "name": "high tablespace usage with invalid objects and stale stats",
+  "queries": {
+    "tablespace_pressure": [
+      {
+        "tablespace_name": "APP_DATA",
+        "used_percent": 92.4,
+        "file_name": "/u02/oradata/ORCL/app_data01.dbf",
+        "autoextensible": "NO",
+        "file_mb": 10240,
+        "max_mb": 32768
+      }
+    ],
+    "blocking_sessions": [
+      {
+        "sid": 201,
+        "serial_number": 9821,
+        "username": "APP",
+        "blocking_session": 44,
+        "blocking_serial_number": 810,
+        "blocking_username": "BATCH",
+        "event": "enq: TX - row lock contention",
+        "seconds_in_wait": 920
+      }
+    ],
+    "invalid_objects": [
+      {
+        "owner": "APP",
+        "object_name": "PKG_BILLING",
+        "object_type": "PACKAGE BODY"
+      },
+      {
+        "owner": "APP",
+        "object_name": "VW_CUSTOMER_BALANCE",
+        "object_type": "VIEW"
+      }
+    ],
+    "stale_stats": [
+      {
+        "owner": "APP",
+        "table_name": "INVOICE",
+        "stale_stats": "YES",
+        "last_analyzed": "2026-06-01 03:10:00"
+      }
+    ],
+    "fra_pressure": [
+      {
+        "name": "+FRA",
+        "space_limit_mb": 512000,
+        "space_used_mb": 471040,
+        "space_reclaimable_mb": 120000,
+        "used_percent": 92.0
+      }
+    ]
+  }
+}

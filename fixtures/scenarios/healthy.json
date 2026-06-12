@@ -1,0 +1,10 @@
+{
+  "name": "healthy database",
+  "queries": {
+    "tablespace_pressure": [],
+    "blocking_sessions": [],
+    "invalid_objects": [],
+    "stale_stats": [],
+    "fra_pressure": []
+  }
+}

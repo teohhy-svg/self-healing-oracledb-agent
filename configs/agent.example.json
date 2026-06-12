@@ -1,0 +1,24 @@
+{
+  "database": {
+    "user": "",
+    "password": "",
+    "dsn": ""
+  },
+  "thresholds": {
+    "tablespace_warning_pct": 85.0,
+    "blocking_wait_seconds": 300,
+    "invalid_objects_min": 1,
+    "stale_stats_min": 1,
+    "fra_warning_pct": 80.0,
+    "datafile_autoextend_next_mb": 1024,
+    "datafile_max_mb": 32768
+  },
+  "safety": {
+    "dry_run": true,
+    "require_approval": true,
+    "allow_storage_changes": false,
+    "allow_session_kill": false,
+    "allow_stats_jobs": true,
+    "max_actions_per_run": 5
+  }
+}
