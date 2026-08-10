@@ -37,6 +37,16 @@ class PerformanceConfig:
 
 
 @dataclass
+class ZabbixConfig:
+    enabled: bool = False
+    url: str = ""
+    api_token: str = ""
+    problem_tags: Dict[str, str] = field(default_factory=lambda: {"service": "oracle"})
+    max_problems_per_run: int = 5
+    allow_status_updates: bool = False
+
+
+@dataclass
 class SafetyConfig:
     dry_run: bool = True
     require_approval: bool = True
@@ -51,6 +61,7 @@ class AgentConfig:
     database: DatabaseConfig = field(default_factory=DatabaseConfig)
     thresholds: ThresholdConfig = field(default_factory=ThresholdConfig)
     performance: PerformanceConfig = field(default_factory=PerformanceConfig)
+    zabbix: ZabbixConfig = field(default_factory=ZabbixConfig)
     safety: SafetyConfig = field(default_factory=SafetyConfig)
 
     @classmethod
@@ -59,6 +70,7 @@ class AgentConfig:
             database=DatabaseConfig(**data.get("database", {})),
             thresholds=ThresholdConfig(**data.get("thresholds", {})),
             performance=PerformanceConfig(**data.get("performance", {})),
+            zabbix=ZabbixConfig(**data.get("zabbix", {})),
             safety=SafetyConfig(**data.get("safety", {})),
         )
 
@@ -75,6 +87,9 @@ class AgentConfig:
         dry_run = os.getenv("AGENT_DRY_RUN")
         if dry_run is not None:
             self.safety.dry_run = _env_bool(dry_run)
+
+        self.zabbix.url = os.getenv("ZABBIX_URL", self.zabbix.url)
+        self.zabbix.api_token = os.getenv("ZABBIX_API_TOKEN", self.zabbix.api_token)
 
 
 def load_config(path: Optional[str]) -> AgentConfig:

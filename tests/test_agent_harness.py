@@ -2,7 +2,7 @@ import unittest
 
 from oracle_self_healing_agent.agent import SelfHealingAgent
 from oracle_self_healing_agent.config import AgentConfig, SafetyConfig
-from oracle_self_healing_agent.harness import FakeOracleClient
+from oracle_self_healing_agent.harness import FakeOracleClient, evaluate_harness
 
 
 HEALTHY_FIXTURE = {
@@ -97,6 +97,23 @@ class AgentHarnessTests(unittest.TestCase):
         self.assertTrue(any("KILL SESSION" in sql for sql in client.executed_sql))
         self.assertTrue(any("COMPILE_SCHEMA" in sql for sql in client.executed_sql))
         self.assertTrue(any("GATHER_SCHEMA_STATS" in sql for sql in client.executed_sql))
+
+    def test_fixture_contract_detects_safety_and_planning_regressions(self):
+        import os
+
+        scenario = os.path.join(
+            os.path.dirname(__file__), "..", "fixtures", "scenarios", "high_tablespace_invalid_objects.json"
+        )
+        report, mismatches = evaluate_harness(scenario, AgentConfig())
+
+        self.assertEqual(mismatches, [])
+        self.assertEqual(report.summary["actions_dry_run"], 1)
+
+    def test_missing_probe_evidence_is_reported_without_an_invented_action(self):
+        report = SelfHealingAgent(FakeOracleClient({"queries": {"tablespace_pressure": []}}), AgentConfig()).run_once()
+
+        self.assertEqual(report.summary["checks_error"], 6)
+        self.assertEqual(report.summary["actions_planned"], 0)
 
 
 if __name__ == "__main__":

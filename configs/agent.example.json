@@ -23,6 +23,16 @@
     "enabled": true,
     "max_findings_per_run": 8
   },
+  "zabbix": {
+    "enabled": false,
+    "url": "",
+    "api_token": "",
+    "problem_tags": {
+      "service": "oracle"
+    },
+    "max_problems_per_run": 5,
+    "allow_status_updates": false
+  },
   "safety": {
     "dry_run": true,
     "require_approval": true,

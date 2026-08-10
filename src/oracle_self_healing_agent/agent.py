@@ -4,6 +4,7 @@ from typing import Iterable, List, Optional
 
 from .actions import ActionExecutor
 from .config import AgentConfig
+from .graph import build_incident_graph
 from .models import CheckResult, HealReport
 from .oracle import DatabaseClient
 from .performance import PerformanceExpertEngineer
@@ -27,6 +28,9 @@ class SelfHealingAgent:
         report.plans = build_action_plan(report.checks, self.config)
         executor = ActionExecutor(self.client, self.config.safety)
         report.actions = [executor.execute(plan) for plan in report.plans]
+        report.incident_graph = build_incident_graph(
+            report.checks, report.performance_findings, report.plans, report.actions
+        )
         report.summary = self._summarize(report)
         return report
 

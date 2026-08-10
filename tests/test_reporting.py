@@ -17,6 +17,8 @@ class ReportingTests(unittest.TestCase):
         self.assertIn("## Performance Expert Findings", markdown)
         self.assertIn("## Healing Plan", markdown)
         self.assertIn("## Safety Gate Results", markdown)
+        self.assertIn("## Incident Dependency Graph", markdown)
+        self.assertIn("flowchart LR", markdown)
         self.assertIn("perf-sql", markdown)
 
 

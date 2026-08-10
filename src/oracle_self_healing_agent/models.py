@@ -54,6 +54,14 @@ class PerformanceFinding:
 
 
 @dataclass
+class IncidentGraph:
+    """A small, dependency-free representation of an incident control graph."""
+
+    nodes: List[Dict[str, str]] = field(default_factory=list)
+    edges: List[Dict[str, str]] = field(default_factory=list)
+
+
+@dataclass
 class HealReport:
     database: str
     dry_run: bool
@@ -62,6 +70,7 @@ class HealReport:
     performance_findings: List[PerformanceFinding] = field(default_factory=list)
     plans: List[ActionPlan] = field(default_factory=list)
     actions: List[ActionResult] = field(default_factory=list)
+    incident_graph: IncidentGraph = field(default_factory=IncidentGraph)
     summary: Dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:

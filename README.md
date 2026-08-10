@@ -38,6 +38,48 @@ Run the tests:
 PYTHONPATH=src python3 -m unittest discover -s tests
 ```
 
+Validate a scenario's regression contract and render its incident graph:
+
+```bash
+PYTHONPATH=src python3 -m oracle_self_healing_agent harness \
+  --scenario fixtures/scenarios/high_tablespace_invalid_objects.json \
+  --config configs/agent.example.json \
+  --assert-expectations \
+  --output-format mermaid
+```
+
+The JSON report also includes `incident_graph`: checks produce advisory findings
+or trigger plans, and plans result in gated, dry-run, manual, or executed
+outcomes. The graph records control-flow evidence, not a claimed database root
+cause. See [the loop brief](docs/loop-brief.md) for the evaluation set, mutation
+levers, and stop rule used for changes to this agent.
+
+## Zabbix Problem and Resolution Automation
+
+The optional Zabbix bridge polls tagged open problems with `problem.get`, runs
+the same Oracle control loop, and can add an acknowledgement/comment containing
+the outcome. It does **not** close problems: a SQL statement completing and a
+verification query returning rows do not prove that the Zabbix trigger has
+recovered. Let the trigger recover naturally, or require a separately approved
+human close workflow.
+
+Set the Zabbix URL and API token only in the environment, then enable the
+integration in a private configuration file:
+
+```bash
+export ZABBIX_URL='https://zabbix.example/zabbix'
+export ZABBIX_API_TOKEN='...'
+
+PYTHONPATH=src python3 -m oracle_self_healing_agent zabbix \
+  --config private-agent.json
+```
+
+Use a dedicated least-privilege token. `allow_status_updates` is `false` by
+default; when enabled, the required Zabbix permission is limited to reading
+problems and adding an acknowledgement/message. Keep the Oracle agent's
+`dry_run` and approval gates enabled until its harness scenarios mirror the
+database incidents you intend to automate.
+
 ## Live Oracle Mode
 
 Install the Oracle driver when you are ready to connect to a database:

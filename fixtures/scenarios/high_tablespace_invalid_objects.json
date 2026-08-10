@@ -1,5 +1,15 @@
 {
   "name": "high tablespace usage with invalid objects and stale stats",
+  "expect": {
+    "summary": {
+      "checks_total": 7,
+      "checks_unhealthy": 7,
+      "actions_planned": 5,
+      "actions_executed": 0,
+      "actions_dry_run": 1
+    },
+    "action_statuses": ["skipped", "skipped", "dry_run", "skipped", "skipped"]
+  },
   "queries": {
     "tablespace_pressure": [
       {

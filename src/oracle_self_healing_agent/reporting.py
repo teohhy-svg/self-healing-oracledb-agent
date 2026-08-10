@@ -4,6 +4,7 @@ import json
 from typing import Dict, Iterable, List, Optional
 
 from .models import ActionPlan, ActionResult, CheckResult, HealReport, PerformanceFinding
+from .graph import render_mermaid
 
 
 def render_report(report: HealReport, output_format: str = "json") -> str:
@@ -11,6 +12,8 @@ def render_report(report: HealReport, output_format: str = "json") -> str:
         return json.dumps(report.to_dict(), indent=2)
     if output_format == "markdown":
         return render_markdown_report(report)
+    if output_format == "mermaid":
+        return render_mermaid(report.incident_graph)
     raise ValueError(f"Unsupported report format: {output_format}")
 
 
@@ -35,6 +38,7 @@ def render_markdown_report(report: HealReport) -> str:
     lines.extend(_plans_table(report.plans))
     lines.extend(["", "## Safety Gate Results", ""])
     lines.extend(_actions_table(report.plans, report.actions))
+    lines.extend(["", "## Incident Dependency Graph", "", "```mermaid", render_mermaid(report.incident_graph), "```"])
     lines.extend(["", "## Recommended Next Steps", ""])
     lines.extend(_next_steps(report))
     lines.append("")

@@ -11,7 +11,23 @@ flowchart LR
   E --> F["Execute or dry-run"]
   F --> G["Verify"]
   G --> H["Report"]
+  H --> I["Incident dependency graph"]
 ```
+
+## Zabbix Incident Boundary
+
+```mermaid
+flowchart LR
+  Z["Zabbix problem.get: tagged Oracle problem"] --> O["Oracle control loop"]
+  O --> G["Incident dependency graph"]
+  G --> N["Optional Zabbix acknowledgement and outcome note"]
+  O --> R["Zabbix trigger recovery or DBA-approved closure"]
+```
+
+Zabbix is the incident intake and operator-facing status surface. Oracle is the
+remediation target. The bridge never treats a completed SQL call as permission
+to close a Zabbix problem; Zabbix trigger recovery is the default resolution
+signal. This keeps monitoring truth separate from automation intent.
 
 ## Harness Engineering Model
 
@@ -24,6 +40,7 @@ The agent is designed so production and test runs use the same logic after the d
 - Runbooks produce `ActionPlan` objects.
 - The executor applies dry-run, approval, and capability gates.
 - Reports are JSON serializable so CI, dashboards, or incident tools can consume them.
+- The incident dependency graph links checks to findings and plans, then plans to their actual gated, dry-run, manual, failed, or executed outcome. It documents control-flow provenance rather than inferring a root cause.
 
 ## Performance Expert Engineer
 

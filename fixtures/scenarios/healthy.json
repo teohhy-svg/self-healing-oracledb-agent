@@ -1,5 +1,13 @@
 {
   "name": "healthy database",
+  "expect": {
+    "summary": {
+      "checks_total": 7,
+      "checks_unhealthy": 0,
+      "actions_planned": 0
+    },
+    "action_statuses": []
+  },
   "queries": {
     "tablespace_pressure": [],
     "blocking_sessions": [],
