@@ -14,8 +14,12 @@ class ReportingTests(unittest.TestCase):
 
         self.assertIn("# Oracle Self-Healing DB Agent Report", markdown)
         self.assertIn("## Executive Summary", markdown)
+        self.assertIn("## Agentic Execution Trace", markdown)
+        self.assertIn("oracle-observer", markdown)
         self.assertIn("## Performance Expert Findings", markdown)
         self.assertIn("## Healing Plan", markdown)
+        self.assertIn("## Policy Decisions", markdown)
+        self.assertIn("Capability gate closed", markdown)
         self.assertIn("## Safety Gate Results", markdown)
         self.assertIn("## Incident Dependency Graph", markdown)
         self.assertIn("flowchart LR", markdown)

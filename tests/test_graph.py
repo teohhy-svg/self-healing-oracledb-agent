@@ -29,6 +29,10 @@ class IncidentGraphTests(unittest.TestCase):
             edges,
         )
         self.assertIn("flowchart LR", render_mermaid(report.incident_graph))
+        self.assertIn(
+            {"source": "agent:observe", "target": "agent:analyze", "relationship": "hands off"},
+            edges,
+        )
 
 
 if __name__ == "__main__":

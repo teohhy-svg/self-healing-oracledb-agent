@@ -9,12 +9,15 @@ Improve the Oracle self-healing agent while preserving its safe-by-default behav
 - All scenario contracts pass with `--assert-expectations`.
 - Default configuration never executes SQL in the harness.
 - Every planned action has an evidence-to-plan-to-outcome path in the incident graph.
+- Every run records the ordered observe, analyze, plan, govern, act, and verify hand-offs.
+- Planning and analysis remain structurally separate from policy and execution authority.
 - New automatic remediation has a verification query or is explicitly marked manual.
 
 ## Failure signals
 
 - A fixture executes SQL with the default configuration.
 - A plan has no source check or an action has no source plan.
+- An advisory agent gains a direct database-write path or can relax a safety gate.
 - A new scenario changes expected safety outcomes without an intentional fixture update and DBA review.
 
 ## Evaluation set
@@ -33,7 +36,7 @@ Change one lever per iteration:
 1. Probe threshold or evidence normalization.
 2. Runbook eligibility and action metadata.
 3. Safety gate or verification behavior.
-4. Graph relationship mapping and report presentation.
+4. Agent hand-off or graph relationship mapping and report presentation.
 
 ## Iteration plan
 

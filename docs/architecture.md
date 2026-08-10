@@ -1,18 +1,37 @@
 # Architecture
 
-## Control Loop
+## Agentic Control Plane
 
 ```mermaid
 flowchart LR
-  A["Probe Oracle views"] --> B["Normalize evidence"]
-  B --> C["Performance expert analysis"]
-  C --> D["Match runbook rules"]
-  D --> E["Apply safety gates"]
-  E --> F["Execute or dry-run"]
-  F --> G["Verify"]
-  G --> H["Report"]
-  H --> I["Incident dependency graph"]
+  A["Observation agent"] -->|"CheckResult"| B["Analysis agent"]
+  B -->|"PerformanceFinding"| C["Planning agent"]
+  C -->|"ActionPlan"| D["Safety-governor agent"]
+  D -->|"policy-constrained plan"| E["Bounded-executor agent"]
+  E -->|"ActionResult"| F["Verification agent"]
+  F --> G["Agent trace and incident graph"]
 ```
+
+`SelfHealingAgent` remains the public façade. Internally,
+`AgenticControlPlane` owns the sequence and shares typed state rather than free
+text. Each role has one authority boundary:
+
+| Agent | Can do | Cannot do |
+| --- | --- | --- |
+| Observation | Query approved Oracle views through registered probes | Execute remediation SQL |
+| Analysis | Produce advisory performance findings | Apply tuning changes |
+| Planning | Select registered runbook plans | Invent or execute arbitrary SQL |
+| Safety governor | Describe and enforce configured policy boundaries | Open a disabled capability |
+| Bounded executor | Execute registered plans after hard gates | Bypass approval, capability, or dry-run policy |
+| Verification | Assess recorded outcomes and verification-query results | Declare Zabbix recovery without trigger evidence |
+
+### Model boundary
+
+No LLM is required for the current control plane. If one is added later, it may
+operate only as a schema-constrained advisor behind the analysis or planning
+role. Its output must resolve to registered runbooks and pass the deterministic
+safety governor. Credentials and database/Zabbix write tools remain outside the
+model boundary.
 
 ## Zabbix Incident Boundary
 
@@ -31,7 +50,7 @@ signal. This keeps monitoring truth separate from automation intent.
 
 ## Harness Engineering Model
 
-The agent is designed so production and test runs use the same logic after the database access boundary.
+The agent is designed so production and test runs use the same agentic logic after the database access boundary.
 
 - `OracleClient` reads live Oracle views and executes SQL or PL/SQL.
 - `FakeOracleClient` reads scenario fixtures and records simulated execution.
@@ -39,6 +58,7 @@ The agent is designed so production and test runs use the same logic after the d
 - `PerformanceExpertEngineer` produces advisory `PerformanceFinding` objects.
 - Runbooks produce `ActionPlan` objects.
 - The executor applies dry-run, approval, and capability gates.
+- `AgentStep` entries form the ordered, audit-friendly hand-off trace.
 - Reports are JSON serializable so CI, dashboards, or incident tools can consume them.
 - The incident dependency graph links checks to findings and plans, then plans to their actual gated, dry-run, manual, failed, or executed outcome. It documents control-flow provenance rather than inferring a root cause.
 

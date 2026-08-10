@@ -13,7 +13,7 @@ class ActionExecutor:
         self.safety = safety
 
     def execute(self, plan: ActionPlan) -> ActionResult:
-        gate = self._gate(plan)
+        gate = evaluate_policy(plan, self.safety)
         if gate:
             return ActionResult(plan.plan_id, "skipped", gate, plan.sql)
 
@@ -35,15 +35,6 @@ class ActionExecutor:
         self._verify(plan, result)
         return result
 
-    def _gate(self, plan: ActionPlan) -> str:
-        if plan.capability and not bool(getattr(self.safety, plan.capability, False)):
-            return f"Capability gate closed: safety.{plan.capability} is false."
-
-        if plan.requires_approval and self.safety.require_approval:
-            return "Approval gate closed: safety.require_approval is true."
-
-        return ""
-
     def _verify(self, plan: ActionPlan, result: ActionResult) -> None:
         if not plan.verification_sql:
             result.verification_status = "not_configured"
@@ -62,3 +53,14 @@ class ActionExecutor:
 
 def _summarize_rows(rows) -> Dict[str, object]:
     return {"row_count": len(rows), "rows": rows[:5]}
+
+
+def evaluate_policy(plan: ActionPlan, safety: SafetyConfig) -> str:
+    """Return an empty string when allowed, otherwise the deterministic gate reason."""
+    if plan.capability and not bool(getattr(safety, plan.capability, False)):
+        return f"Capability gate closed: safety.{plan.capability} is false."
+
+    if plan.requires_approval and safety.require_approval:
+        return "Approval gate closed: safety.require_approval is true."
+
+    return ""

@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from typing import Dict, Iterable, List, Optional
 
-from .models import ActionPlan, ActionResult, CheckResult, HealReport, PerformanceFinding
+from .models import ActionPlan, ActionResult, CheckResult, HealReport, PerformanceFinding, PolicyDecision
 from .graph import render_mermaid
 
 
@@ -30,12 +30,16 @@ def render_markdown_report(report: HealReport) -> str:
         "",
     ]
     lines.extend(_summary_lines(report))
+    lines.extend(["", "## Agentic Execution Trace", ""])
+    lines.extend(_agent_trace_table(report))
     lines.extend(["", "## Health Checks", ""])
     lines.extend(_checks_table(report.checks))
     lines.extend(["", "## Performance Expert Findings", ""])
     lines.extend(_performance_findings(report.performance_findings))
     lines.extend(["", "## Healing Plan", ""])
     lines.extend(_plans_table(report.plans))
+    lines.extend(["", "## Policy Decisions", ""])
+    lines.extend(_policy_table(report.policy_decisions))
     lines.extend(["", "## Safety Gate Results", ""])
     lines.extend(_actions_table(report.plans, report.actions))
     lines.extend(["", "## Incident Dependency Graph", "", "```mermaid", render_mermaid(report.incident_graph), "```"])
@@ -43,6 +47,17 @@ def render_markdown_report(report: HealReport) -> str:
     lines.extend(_next_steps(report))
     lines.append("")
     return "\n".join(lines)
+
+
+def _agent_trace_table(report: HealReport) -> List[str]:
+    rows = ["| Stage | Agent role | Status | Summary |", "| --- | --- | --- | --- |"]
+    for step in report.agent_trace:
+        rows.append(
+            f"| `{_cell(step.stage)}` | `{_cell(step.role)}` | {_cell(step.status)} | {_cell(step.summary)} |"
+        )
+    if not report.agent_trace:
+        return ["No agentic execution trace was recorded."]
+    return rows
 
 
 def _summary_lines(report: HealReport) -> List[str]:
@@ -53,6 +68,8 @@ def _summary_lines(report: HealReport) -> List[str]:
         f"- Probe errors: **{summary.get('checks_error', 0)}**",
         f"- Performance findings: **{summary.get('performance_findings', 0)}**",
         f"- Healing actions planned: **{summary.get('actions_planned', 0)}**",
+        f"- Plans allowed by policy: **{summary.get('policy_allowed', 0)}**",
+        f"- Plans denied by policy: **{summary.get('policy_denied', 0)}**",
         f"- Actions executed: **{summary.get('actions_executed', 0)}**",
         f"- Actions skipped or gated: **{summary.get('actions_skipped', 0)}**",
         f"- Dry-run actions: **{summary.get('actions_dry_run', 0)}**",
@@ -126,6 +143,18 @@ def _actions_table(plans: Iterable[ActionPlan], actions: Iterable[ActionResult])
         rows.append(f"| `{_cell(label)}` | {_cell(action.status)} | {_cell(action.message)} | {sql} |")
     if count == 0:
         return ["No action results were recorded."]
+    return rows
+
+
+def _policy_table(decisions: Iterable[PolicyDecision]) -> List[str]:
+    rows = ["| Plan | Decision | Reason |", "| --- | --- | --- |"]
+    count = 0
+    for decision in decisions:
+        count += 1
+        label = "allowed" if decision.allowed else "denied"
+        rows.append(f"| `{_cell(decision.plan_id)}` | {_cell(label)} | {_cell(decision.reason)} |")
+    if count == 0:
+        return ["No policy decisions were required."]
     return rows
 
 

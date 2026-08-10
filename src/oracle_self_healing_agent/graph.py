@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from typing import Dict, Iterable, List
 
-from .models import ActionPlan, ActionResult, CheckResult, IncidentGraph, PerformanceFinding
+from .models import ActionPlan, ActionResult, AgentStep, CheckResult, IncidentGraph, PerformanceFinding, PolicyDecision
 
 
 def build_incident_graph(
@@ -11,6 +11,8 @@ def build_incident_graph(
     findings: Iterable[PerformanceFinding],
     plans: Iterable[ActionPlan],
     actions: Iterable[ActionResult],
+    agent_steps: Iterable[AgentStep] = (),
+    policy_decisions: Iterable[PolicyDecision] = (),
 ) -> IncidentGraph:
     """Connect operational evidence to the decisions and outcomes it caused.
 
@@ -23,11 +25,23 @@ def build_incident_graph(
     findings = list(findings)
     plans = list(plans)
     actions = list(actions)
+    agent_steps = list(agent_steps)
+    policy_decisions = list(policy_decisions)
     check_nodes = {_check_id(check.name): check for check in checks}
     plan_nodes = {_plan_id(plan.plan_id): plan for plan in plans}
 
+    previous_agent_id = ""
+    for step in agent_steps:
+        agent_id = _agent_id(step.stage)
+        _add_node(graph, agent_id, "agent", f"{step.role}: {step.status}")
+        if previous_agent_id:
+            _add_edge(graph, previous_agent_id, agent_id, "hands off")
+        previous_agent_id = agent_id
+
     for node_id, check in check_nodes.items():
         _add_node(graph, node_id, "check", f"{check.name}: {check.status} ({check.severity})")
+        if agent_steps:
+            _add_edge(graph, _agent_id("observe"), node_id, "emits evidence")
 
     for finding in findings:
         finding_id = _finding_id(finding.finding_id)
@@ -35,12 +49,23 @@ def build_incident_graph(
         source = _source_check_for_finding(finding)
         if source in check_nodes:
             _add_edge(graph, source, finding_id, "produces finding")
+        if agent_steps:
+            _add_edge(graph, _agent_id("analyze"), finding_id, "emits advice")
 
     for node_id, plan in plan_nodes.items():
         _add_node(graph, node_id, "plan", f"{plan.action_type}: {plan.risk} risk")
         source = _check_id(plan.check_name)
         if source in check_nodes:
             _add_edge(graph, source, node_id, "triggers plan")
+        if agent_steps:
+            _add_edge(graph, _agent_id("plan"), node_id, "proposes")
+
+    for decision in policy_decisions:
+        decision_id = _policy_id(decision.plan_id)
+        label = "allowed" if decision.allowed else "denied"
+        _add_node(graph, decision_id, "policy", f"policy: {label}")
+        _add_edge(graph, _plan_id(decision.plan_id), decision_id, "policy input")
+        _add_edge(graph, _agent_id("govern"), decision_id, "decides")
 
     for action in actions:
         action_id = _action_id(action.plan_id)
@@ -48,6 +73,11 @@ def build_incident_graph(
         source = _plan_id(action.plan_id)
         if source in plan_nodes:
             _add_edge(graph, source, action_id, "results in")
+        if agent_steps:
+            _add_edge(graph, _agent_id("act"), action_id, "records outcome")
+            _add_edge(graph, action_id, _agent_id("verify"), "verification input")
+        if policy_decisions:
+            _add_edge(graph, _policy_id(action.plan_id), action_id, "constrains")
 
     return graph
 
@@ -58,8 +88,8 @@ def render_mermaid(graph: IncidentGraph) -> str:
     for node in graph.nodes:
         node_id = _mermaid_id(node["id"])
         label = _escape_label(node["label"])
-        shape = {"check": "[", "finding": "([", "plan": "{{", "outcome": "[["}.get(node["type"], "[")
-        close = {"check": "]", "finding": "]) ", "plan": "}}", "outcome": "]]"}.get(node["type"], "]")
+        shape = {"agent": "([", "check": "[", "finding": "([", "plan": "{{", "policy": "{", "outcome": "[["}.get(node["type"], "[")
+        close = {"agent": "])", "check": "]", "finding": "])", "plan": "}}", "policy": "}", "outcome": "]]"}.get(node["type"], "]")
         lines.append(f'  {node_id}{shape}"{label}"{close}'.rstrip())
     for edge in graph.edges:
         lines.append(
@@ -99,6 +129,14 @@ def _plan_id(value: str) -> str:
 
 def _action_id(value: str) -> str:
     return f"outcome:{value}"
+
+
+def _agent_id(value: str) -> str:
+    return f"agent:{value}"
+
+
+def _policy_id(value: str) -> str:
+    return f"policy:{value}"
 
 
 def _mermaid_id(value: str) -> str:

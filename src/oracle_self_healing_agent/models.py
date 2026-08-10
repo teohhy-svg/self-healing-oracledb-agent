@@ -34,6 +34,13 @@ class ActionPlan:
 
 
 @dataclass
+class PolicyDecision:
+    plan_id: str
+    allowed: bool
+    reason: str
+
+
+@dataclass
 class ActionResult:
     plan_id: str
     status: str
@@ -62,6 +69,17 @@ class IncidentGraph:
 
 
 @dataclass
+class AgentStep:
+    """An auditable hand-off in the agentic control plane."""
+
+    stage: str
+    role: str
+    status: str
+    summary: str
+    artifact_ids: List[str] = field(default_factory=list)
+
+
+@dataclass
 class HealReport:
     database: str
     dry_run: bool
@@ -69,7 +87,9 @@ class HealReport:
     checks: List[CheckResult] = field(default_factory=list)
     performance_findings: List[PerformanceFinding] = field(default_factory=list)
     plans: List[ActionPlan] = field(default_factory=list)
+    policy_decisions: List[PolicyDecision] = field(default_factory=list)
     actions: List[ActionResult] = field(default_factory=list)
+    agent_trace: List[AgentStep] = field(default_factory=list)
     incident_graph: IncidentGraph = field(default_factory=IncidentGraph)
     summary: Dict[str, Any] = field(default_factory=dict)
 

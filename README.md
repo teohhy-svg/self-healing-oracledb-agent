@@ -1,16 +1,30 @@
 # Oracle Self-Healing DB Agent
 
-This project is a safe-by-default Oracle Database healing agent built around a harness engineering approach:
+This project is a safe-by-default Oracle Database healing system built as a governed agentic control plane:
 
-1. Observe database health with focused probes.
-2. Let the performance expert engineer translate workload symptoms into tuning findings.
-3. Convert safe operational symptoms into explicit runbook actions.
-4. Gate every action with risk, approval, and capability checks.
-5. Execute only when dry-run and approval settings allow it.
-6. Verify outcomes and emit a structured report.
-7. Prove behavior first in a deterministic local harness before live Oracle use.
+1. The observation agent collects focused database evidence.
+2. The performance-analysis agent translates symptoms into advisory findings.
+3. The planning agent converts supported symptoms into bounded runbook actions.
+4. The safety-governor agent applies risk, approval, capability, and action-count policy.
+5. The bounded-executor agent acts only when those hard gates allow it.
+6. The verification agent assesses action outcomes and verification queries.
+7. Every hand-off is recorded in `agent_trace` and connected in the incident graph.
+8. The deterministic harness proves the complete path before live Oracle use.
 
 The default mode is dry-run. It will tell you what it would do without changing the database.
+
+## Agentic Control Plane
+
+`SelfHealingAgent` is the stable façade; `AgenticControlPlane` coordinates six
+specialized agents with typed artifacts (`CheckResult`, `PerformanceFinding`,
+`ActionPlan`, and `ActionResult`). Analysis and planning never receive direct
+execution authority. Only the bounded executor can call the database, and it
+must pass the existing deterministic safety gates.
+
+The current agents are deterministic so their behavior can be reproduced in
+the harness. A future LLM may propose analysis or planning advice through a
+strict schema, but it must not own credentials, create arbitrary SQL, relax
+policy, or call Oracle/Zabbix write operations directly.
 
 ## Quick Start
 
@@ -48,11 +62,12 @@ PYTHONPATH=src python3 -m oracle_self_healing_agent harness \
   --output-format mermaid
 ```
 
-The JSON report also includes `incident_graph`: checks produce advisory findings
-or trigger plans, and plans result in gated, dry-run, manual, or executed
-outcomes. The graph records control-flow evidence, not a claimed database root
-cause. See [the loop brief](docs/loop-brief.md) for the evaluation set, mutation
-levers, and stop rule used for changes to this agent.
+The JSON report includes `agent_trace` and `incident_graph`. The trace records
+each agent hand-off; the graph connects those agents to evidence, plans, and
+gated, dry-run, manual, or executed outcomes. It records control-flow evidence,
+not a claimed database root cause. See [the loop brief](docs/loop-brief.md) for
+the evaluation set, mutation levers, and stop rule used for changes to this
+agent.
 
 ## Zabbix Problem and Resolution Automation
 
